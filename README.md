@@ -1,1 +1,3 @@
 # Projects
+
+Welcome to my GitHub Projects Page! My name is Syed Razvi and I am an aspiring NLP Data Scientist in Chicago! I will be detailing my personal projects and the tools that I use to further develop my understanding of these libraries as well as showcase some of the skills I've gained while being a part of the Metis program. I will also be writing more explanatory details about each of these projects on my blog [lingomath.com](lingomath.com), so definitely check that out, and feel free to reach out to me at srazvi3 AT protonmail DOT com
