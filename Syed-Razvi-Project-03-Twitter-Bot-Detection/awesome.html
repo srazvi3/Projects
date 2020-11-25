@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Prediction Wizard</title>
+    <link rel="stylesheet" href="static/d3.slider.css" />
+    <style>
+
+     body {
+       font-family: Verdana,Arial,sans-serif;
+     }
+
+     h2 {
+       font-size: 1.2em;
+       margin: 60px 0 5px 0;
+       color: rgb(187, 36, 36)
+     }
+
+     .space {
+       margin-bottom: 20 px;
+     }
+
+     .wrapper {
+       width: 800px;
+       margin-left: auto;
+       margin-right: auto;
+       margin-bottom: 0px;
+     }
+
+     #bar_chart {
+       margin-bottom: 0 px;
+     }
+
+     .bar {
+       fill: #d8790d;
+     }
+
+     span {
+       color: rgb(0, 0, 0);
+     }
+
+    </style>
+  </head>
+
+  <body>
+
+
+    <div id="chart_area" class="wrapper">
+      <h2>Sus-o-Meter</h2>
+      <p class="space"></p>
+      <div id="bar_chart">
+      </div>
+    </div>
+
+    <div id="sliders" class="wrapper">
+
+      <h2 class="feature">Account Age: <span id="age">8</span></h2>
+      <div id="age_slider"></div>
+
+      <h2 class="feature">Average Tweets per Day: <span id="avg">3</span></h2>
+      <div id="avg_slider"></div>
+
+      <h2 class="feature">Number of Followers: <span id="follow">1000</span></h2>
+      <div id="follow_slider"></div>
+
+      <h2 class="feature">Number of Accounts Following: <span id="friend">100</span></h2>
+      <div id="friend_slider"></div>
+
+      <h2 class="feature">Total Tweets: <span id="tweets">500</span></h2>
+      <div id="tweets_slider"></div>
+
+      
+
+    </div>
+
+    <!-- Import the libraries: jQuery, d3, d3.slider -->
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="http://d3js.org/d3.v3.min.js"></script>
+    <script src="static/d3.slider.js"></script>
+
+    <script>
+
+     <!-- SINGLE BAR CHART -->
+
+     var current_age = 8;
+     var current_avg = 3;
+     var current_follow = 1000;
+     var current_friend = 100;
+     var current_tweets = 500;
+     var current_risk = 48.6;
+
+     var chart = d3.select("#bar_chart")
+                   .append("svg:svg")
+                   .attr("width", 800)
+                   .attr("height", 100);
+
+     var chance_scale = d3.scale.linear()
+                                .domain([0, 100])
+                                .range([0, 800]);
+
+     var bar = chart.append("g")
+                    .attr("class", "bar")
+
+       bar.append("svg:rect")
+          .attr("id", "chancebar")
+          .attr("class", "bar")
+          .attr("width", chance_scale(current_risk))
+          .attr("height", 50);
+
+     bar.append("text")
+        .attr("id", "percent_text")
+        .attr("dy", ".75em")
+        .attr("y", 15)
+        .attr("x", chance_scale(current_risk-5))
+        .attr("text-anchor", "middle")
+        .attr("fill", "white")
+        .attr("font-size", 20)
+        .text( current_risk.toFixed(1) + "%");
+
+
+     <!-- FUNCTION TO GET CHANCE FROM YOUR PREDICTOR WITH AJAX AND CHANGE BAR  HEIGHT -->
+     function getAndDrawChance(age, avg, follow, friend, tweets){
+
+       age = age *365;
+       $.ajax({
+         type: "POST",
+         contentType: "application/json; charset=utf-8",
+         url: "/score",
+         dataType: "json",
+         async: true,
+         data: "{\"example\": [0,0,1,2066,"+follow+","+friend+",0,1,1,"+tweets+",0,"+avg+","+age+",1,1]}",
+         success: function (data) {
+           var chance = 100 * data["score"];
+           d3.select("#chancebar")
+             .attr("width", chance_scale(chance));
+           d3.select("#percent_text")
+             .attr("x", chance_scale(chance-5))
+             .text(chance.toFixed(1) + "%");
+         },
+         error: function (result) {
+         }
+       })
+     }
+
+
+     <!-- SLIDERS -->
+
+     d3.select('#age_slider')
+       .call(
+         d3.slider()
+           .value(current_age)
+           .max(14)
+           .step(1)
+           .axis(true)
+           .on("slide", function(evt,value) {
+             d3.select('#age').text(value);
+             current_age = value;
+             getAndDrawChance(current_age, current_avg, current_follow, current_friend, current_tweets)
+           }
+           )
+       );
+
+     d3.select('#avg_slider')
+       .call(
+         d3.slider()
+           .value(current_avg)
+           .max(10)
+           .step(1)
+           .axis(true)
+           .on("slide", function(evt,value) {
+             d3.select('#avg').text(value);
+             current_avg = value;
+             getAndDrawChance(current_age, current_avg, current_follow, current_friend, current_tweets)
+           }
+           )
+       );
+
+     d3.select('#follow_slider')
+       .call(
+         d3.slider()
+           .value(current_follow)
+           .max(1000000)
+           .step(10000)
+           .axis(true)
+           .on("slide", function(evt,value) {
+             d3.select('#follow').text(value);
+             current_follow = value;
+             getAndDrawChance(current_age, current_avg, current_follow, current_friend, current_tweets)
+           }
+           )
+       );
+       
+     d3.select('#friend_slider')
+       .call(
+         d3.slider()
+           .value(current_friend)
+           .max(1000)
+           .step(100)
+           .axis(true)
+           .on("slide", function(evt,value) {
+             d3.select('#friend').text(value);
+             current_friend = value;
+             getAndDrawChance(current_age, current_avg, current_follow, current_friend, current_tweets)
+           }
+           )
+       );
+
+     d3.select('#tweets_slider')
+       .call(
+         d3.slider()
+           .value(current_tweets)
+           .max(10000)
+           .step(250)
+           .axis(true)
+           .on("slide", function(evt,value) {
+             d3.select('#tweets').text(value);
+             current_tweets = value;
+             getAndDrawChance(current_age, current_avg, current_follow, current_friend, current_tweets)
+           }
+           )
+       );  
+    
+
+    </script>
+  </body>
+</html>
